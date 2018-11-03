@@ -110,7 +110,7 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
             var sX, sY;
             var eX, eY;
             var outerRad = width / 2;
-            var innerRad = outerRad - 5;	// length of hashmark
+            var innerRad = outerRad - 10;	// length of hashmark
             // Loop through each 15 minute block and draw tick marks.
             for (var i = Math.PI / 6; i <= 11 * Math.PI / 6; i += (Math.PI / 3)) {
                 // Partially unrolled loop to draw two tickmarks in 15 minute block.
@@ -242,11 +242,24 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
         hourHandAngle = (((clockTime.hour % 12) * 60) + clockTime.min);
         hourHandAngle = hourHandAngle / (12 * 60.0);
         hourHandAngle = hourHandAngle * Math.PI * 2;
-        targetDeviceContext.fillPolygon(generateHandCoordinates(screenCenterPoint, hourHandAngle, 60, 15, 5));
+        var hourHandCoordinates = generateHandCoordinates(screenCenterPoint, hourHandAngle, 60, 15, 7);
+        targetDeviceContext.fillPolygon(hourHandCoordinates);
 
         // Draw the minute hand.
         minuteHandAngle = (clockTime.min / 60.0) * Math.PI * 2;
-        targetDeviceContext.fillPolygon(generateHandCoordinates(screenCenterPoint, minuteHandAngle, 100, 15, 4));
+        var minuteHandCoordinates = generateHandCoordinates(screenCenterPoint, minuteHandAngle, 100, 15, 5);
+        targetDeviceContext.fillPolygon(minuteHandCoordinates);
+
+		// draw red outline of hands
+		deviceContext.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
+		targetDeviceContext.drawLine(hourHandCoordinates[0][0], hourHandCoordinates[0][1], hourHandCoordinates[1][0], hourHandCoordinates[1][1]);
+		targetDeviceContext.drawLine(hourHandCoordinates[1][0], hourHandCoordinates[1][1], hourHandCoordinates[2][0], hourHandCoordinates[2][1]);
+		targetDeviceContext.drawLine(hourHandCoordinates[2][0], hourHandCoordinates[2][1], hourHandCoordinates[3][0], hourHandCoordinates[3][1]);
+		targetDeviceContext.drawLine(hourHandCoordinates[3][0], hourHandCoordinates[3][1], hourHandCoordinates[0][0], hourHandCoordinates[0][1]);
+		targetDeviceContext.drawLine(minuteHandCoordinates[0][0], minuteHandCoordinates[0][1], minuteHandCoordinates[1][0], minuteHandCoordinates[1][1]);
+		targetDeviceContext.drawLine(minuteHandCoordinates[1][0], minuteHandCoordinates[1][1], minuteHandCoordinates[2][0], minuteHandCoordinates[2][1]);
+		targetDeviceContext.drawLine(minuteHandCoordinates[2][0], minuteHandCoordinates[2][1], minuteHandCoordinates[3][0], minuteHandCoordinates[3][1]);
+		targetDeviceContext.drawLine(minuteHandCoordinates[3][0], minuteHandCoordinates[3][1], minuteHandCoordinates[0][0], minuteHandCoordinates[0][1]);
 
         if( partialUpdatesAllowed ) {
             // If this device supports partial updates and they are currently
