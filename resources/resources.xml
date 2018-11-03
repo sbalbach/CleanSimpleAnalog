@@ -1,0 +1,5 @@
+<resources>
+    <fonts>
+        <font id="id_font_fenix_font" filename="fonts/FenixFont.fnt" />
+	</fonts>
+</resources>

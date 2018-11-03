@@ -1,0 +1,11 @@
+info face="FangSong" size=32 bold=0 italic=0 charset="" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0
+common lineHeight=33 base=28 scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=1 redChnl=0 greenChnl=0 blueChnl=0
+page id=0 file="FenixFont.png"
+chars count=5
+char id=51    x=0     y=0     width=14    height=15    xoffset=0     yoffset=6     xadvance=16    page=0  chnl=15
+char id=54    x=15    y=0     width=14    height=15    xoffset=0     yoffset=6     xadvance=16    page=0  chnl=15
+char id=57    x=30    y=0     width=14    height=15    xoffset=0     yoffset=6     xadvance=16    page=0  chnl=15
+char id=50    x=45    y=0     width=12    height=15    xoffset=0     yoffset=6     xadvance=14    page=0  chnl=15
+char id=49    x=58    y=0     width=10    height=15    xoffset=0     yoffset=6     xadvance=12    page=0  chnl=15
+char id=98    x=69    y=0     width=9     height=15    xoffset=0     yoffset=6     xadvance=11    page=0  chnl=15
+char id=109   x=79    y=0     width=26    height=20    xoffset=0     yoffset=6     xadvance=26    page=0  chnl=15
