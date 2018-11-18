@@ -7,153 +7,189 @@ using Toybox.Time.Gregorian;
 using Toybox.WatchUi;
 using Toybox.Application;
 
-var partialUpdatesAllowed = false;
-
 // This implements an analog watch face
 // Original design by Austen Harbour
 class CleanSimpleAnalogView extends WatchUi.WatchFace {
-    var font;
+    var hoursDigitsFont;
+    var secondsDialsFont;
     var isAwake;
     var screenShape;
     var dndIcon;
+    var partialUpdatesAllowed;
     var offscreenBuffer;
-    var dateBuffer;
     var curClip;
     var screenCenterPoint;
-    var fullScreenRefresh;
+    var width;
+    var height;
+    var widthDiv2;
+    var heightDiv2;
+    var widthDiv3;
+    var heightDiv3;
+    var width75;
+    var height75;
+	var handsOutlineColor;
+    var secondHandType;
+    var showAllHourNumbers;
+    var hourNumberLocation1;
+    var hourNumberLocation2;
+    var hourNumberLocation3;
+    var hourNumberLocation4;
+    var bluetoothAndNotificatoinCountLocation;
+    var notificationCountLocationY;
+    var batteryPercentageLocationX;
+    var stepsLocationX;
+    
+    var minuteHandPoints = [[-2,15], [-2,-90], [0, -100], [2,-90], [2,15]];
+    var hourHandPoints = [[-3,15], [-3,-50], [0, -60], [3,-50], [3,15]];
+    var secondHandPoints = [[-1,25], [-1,-100], [1,-100], [1,25]];
 
     // Initialize variables for this view
     function initialize() {
         WatchFace.initialize();
         screenShape = System.getDeviceSettings().screenShape;
-        fullScreenRefresh = true;
         partialUpdatesAllowed = ( Toybox.WatchUi.WatchFace has :onPartialUpdate );
+        
+        var app = Application.getApp();
+        var handsOutline = app.getProperty("handsOutline");
+        secondHandType = app.getProperty("secondHandType");
+        showAllHourNumbers = app.getProperty("showAllHourNumbers");
+        
+        handsOutline = "8";
+        secondHandType = 0;
+        
+/* defined in resources.xml:
+	    <setting propertyKey="@Properties.handsOutline" title="@Strings.handsOutline">
+	        <settingConfig type="list">
+	            <listEntry value="0">@Strings.none</listEntry>
+	            <listEntry value="1">@Strings.white</listEntry>
+	            <listEntry value="2">@Strings.lightGray</listEntry>
+	            <listEntry value="3">@Strings.darkGray</listEntry>
+	            <listEntry value="4">@Strings.black</listEntry>
+	            <listEntry value="5">@Strings.red</listEntry>
+	            <listEntry value="6">@Strings.darkRed</listEntry>
+	            <listEntry value="7">@Strings.orange</listEntry>
+	            <listEntry value="8">@Strings.yellow</listEntry>
+	            <listEntry value="9">@Strings.green</listEntry>
+	            <listEntry value="10">@Strings.darkGreen</listEntry>
+	            <listEntry value="11">@Strings.blue</listEntry>
+	            <listEntry value="12">@Strings.darkBlue</listEntry>
+	            <listEntry value="13">@Strings.purple</listEntry>
+	            <listEntry value="14">@Strings.pink</listEntry>
+	        </settingConfig>
+	    </setting>
+*/
+		if( "0".equals(handsOutline) ) {
+			handsOutlineColor = Graphics.COLOR_TRANSPARENT;
+		} else if( "1".equals(handsOutline) ) {
+			handsOutlineColor = Graphics.COLOR_WHITE;
+		} else if( "2".equals(handsOutline) ) {
+			handsOutlineColor = Graphics.COLOR_LT_GRAY;
+		} else if( "3".equals(handsOutline) ) {
+			handsOutlineColor = Graphics.COLOR_DK_GRAY;
+		} else if( "4".equals(handsOutline) ) {
+			handsOutlineColor = Graphics.COLOR_BLACK;
+		} else if( "5".equals(handsOutline) ) {
+			handsOutlineColor = Graphics.COLOR_RED;
+		} else if( "6".equals(handsOutline) ) {
+			handsOutlineColor = Graphics.COLOR_DK_RED;
+		} else if( "7".equals(handsOutline) ) {
+			handsOutlineColor = Graphics.COLOR_ORANGE;
+		} else if( "8".equals(handsOutline) ) {
+			handsOutlineColor = Graphics.COLOR_YELLOW;
+		} else if( "9".equals(handsOutline) ) {
+			handsOutlineColor = Graphics.COLOR_GREEN;
+		} else if( "10".equals(handsOutline) ) {
+			handsOutlineColor = Graphics.COLOR_DK_GREEN;
+		} else if( "11".equals(handsOutline) ) {
+			handsOutlineColor = Graphics.COLOR_BLUE;
+		} else if( "12".equals(handsOutline) ) {
+			handsOutlineColor = Graphics.COLOR_DK_BLUE;
+		} else if( "13".equals(handsOutline) ) {
+			handsOutlineColor = Graphics.COLOR_PURPLE;
+		} else if( "14".equals(handsOutline) ) {
+			handsOutlineColor = Graphics.COLOR_PINK;
+		}
     }
 
     // Configure the layout of the watchface for this device
     function onLayout(deviceContext) {
+	    // initialize a bunch of values based off of screen size
+        width = deviceContext.getWidth();
+        height = deviceContext.getHeight();
+        widthDiv2 = width/2;
+        heightDiv2 = height/2;
+        widthDiv3 = width/3;
+        heightDiv3 = height/3;
+        
+        var minuteHandTailLength = height/14.53;
+        var minuteHandHeadLength = height/-2.42;
+        minuteHandPoints[0] = [-2, minuteHandTailLength];
+        minuteHandPoints[1] = [-2, minuteHandHeadLength];
+        minuteHandPoints[2] = [ 0, height/-2.18];			// tip
+        minuteHandPoints[3] = [ 2, minuteHandHeadLength];
+        minuteHandPoints[4] = [ 2, minuteHandTailLength];
 
-        // Load the custom font we use for drawing the 3, 6, 9, and 12 on the watchface.
-        font = WatchUi.loadResource(Rez.Fonts.id_font_fenix_font);
+        var hourHandTailLength = height/14.53;
+        var hourHandHeadLength = height/-4.36;
+        hourHandPoints[0] = [-3, hourHandTailLength];
+        hourHandPoints[1] = [-3, hourHandHeadLength];
+        hourHandPoints[2] = [ 0, height/-3.63];				// tip
+        hourHandPoints[3] = [ 3, hourHandHeadLength];
+        hourHandPoints[4] = [ 3, hourHandTailLength];
 
-        // If this device supports the Do Not Disturb feature,
-        // load the associated Icon into memory.
-        if (System.getDeviceSettings() has :doNotDisturb) {
+        var secondHandTailLength = height/8.72;
+        var secondHandHeadLength = height/-2.18;
+        secondHandPoints[0] = [-1, secondHandTailLength];
+        secondHandPoints[1] = [-1, secondHandHeadLength];
+        secondHandPoints[2] = [ 1, secondHandHeadLength];
+        secondHandPoints[3] = [ 1, secondHandTailLength];
+
+		hourNumberLocation1 = height/6.5;
+		hourNumberLocation2 = height/3.5;
+		hourNumberLocation3 = height-hourNumberLocation2;
+		hourNumberLocation4 = height-hourNumberLocation1;
+
+		bluetoothAndNotificatoinCountLocation = height/7.26;
+		notificationCountLocationY = height/4;
+		batteryPercentageLocationX = width/1.12;
+		stepsLocationX = width/9.5;
+
+        width75 = width*.75;
+        height75 = hourNumberLocation3;
+		
+        // Load the custom fonts we use
+        hoursDigitsFont = WatchUi.loadResource(Rez.Fonts.id_font_hours_digits);
+        secondsDialsFont = WatchUi.loadResource(Rez.Fonts.id_font_seconds_dials);
+
+        // If this device supports the Do Not Disturb feature, load the associated Icon into memory.
+        if( System.getDeviceSettings() has :doNotDisturb ) {
             dndIcon = WatchUi.loadResource(Rez.Drawables.DoNotDisturbIcon);
         } else {
             dndIcon = null;
         }
 
         // If this device supports BufferedBitmap, allocate the buffers we use for drawing
-        if(Toybox.Graphics has :BufferedBitmap) {
-            // Allocate a full screen size buffer with a palette of only 4 colors to draw
-            // the background image of the watchface.  This is used to facilitate blanking
-            // the second hand during partial updates of the display
+        if( Toybox.Graphics has :BufferedBitmap ) {
+            // Allocate a full screen size buffer.  This buffer is used to draw the watch face between full minute updates when the second hand is the only thing being updated.
             offscreenBuffer = new Graphics.BufferedBitmap({
                 :width=>deviceContext.getWidth(),
-                :height=>deviceContext.getHeight(),
-                :palette=> [
-                    Graphics.COLOR_DK_GRAY,
-                    Graphics.COLOR_LT_GRAY,
-                    Graphics.COLOR_BLACK,
-                    Graphics.COLOR_WHITE
-                ]
+                :height=>deviceContext.getHeight()
             });
 
-            // Allocate a buffer tall enough to draw the date into the full width of the
-            // screen. This buffer is also used for blanking the second hand. This full
-            // color buffer is needed because anti-aliased fonts cannot be drawn into
-            // a buffer with a reduced color palette
-            dateBuffer = new Graphics.BufferedBitmap({
-                :width=>deviceContext.getWidth(),
-                :height=>Graphics.getFontHeight(Graphics.FONT_MEDIUM)
-            });
         } else {
             offscreenBuffer = null;
         }
 
         curClip = null;
 
-        screenCenterPoint = [deviceContext.getWidth()/2, deviceContext.getHeight()/2];
-    }
-
-    // This function is used to generate the coordinates of the 4 corners of the polygon
-    // used to draw a watch hand. The coordinates are generated with specified length,
-    // tail length, and width and rotated around the center point at the provided angle.
-    // 0 degrees is at the 12 o'clock position, and increases in the clockwise direction.
-    function generateHandCoordinates(centerPoint, angle, handLength, tailLength, width) {
-        // Map out the coordinates of the watch hand
-        var coords = [[-(width / 2), tailLength], [-(width / 2), -handLength], [width / 2, -handLength], [width / 2, tailLength]];
-        var result = new [4];
-        var cos = Math.cos(angle);
-        var sin = Math.sin(angle);
-
-        // Transform the coordinates
-        for (var i = 0; i < 4; i += 1) {
-            var x = (coords[i][0] * cos) - (coords[i][1] * sin) + 0.5;
-            var y = (coords[i][0] * sin) + (coords[i][1] * cos) + 0.5;
-
-            result[i] = [centerPoint[0] + x, centerPoint[1] + y];
-        }
-
-        return result;
-    }
-
-    // Draws the clock tick marks around the outside edges of the screen.
-    function drawHashMarks(deviceContext) {
-        deviceContext.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-        var width = deviceContext.getWidth();
-        var height = deviceContext.getHeight();
-
-        // Draw hashmarks differently depending on screen geometry.
-        if (System.SCREEN_SHAPE_ROUND == screenShape) {
-            var sX, sY;
-            var eX, eY;
-            var outerRad = width / 2;
-            var innerRad = outerRad - 10;	// length of hashmark
-            // Loop through each 15 minute block and draw tick marks.
-            for (var i = Math.PI / 6; i <= 11 * Math.PI / 6; i += (Math.PI / 3)) {
-                // Partially unrolled loop to draw two tickmarks in 15 minute block.
-                sY = outerRad + innerRad * Math.sin(i);
-                eY = outerRad + outerRad * Math.sin(i);
-                sX = outerRad + innerRad * Math.cos(i);
-                eX = outerRad + outerRad * Math.cos(i);
-                deviceContext.drawLine(sX, sY, eX, eY);
-                i += Math.PI / 6;
-                sY = outerRad + innerRad * Math.sin(i);
-                eY = outerRad + outerRad * Math.sin(i);
-                sX = outerRad + innerRad * Math.cos(i);
-                eX = outerRad + outerRad * Math.cos(i);
-                deviceContext.drawLine(sX, sY, eX, eY);
-            }
-        } else {
-            var coords = [0, width / 4, (3 * width) / 4, width];
-            for (var i = 0; i < coords.size(); i += 1) {
-                var dx = ((width / 2.0) - coords[i]) / (height / 2.0);
-                var upperX = coords[i] + (dx * 10);
-                // Draw the upper hash marks.
-                deviceContext.fillPolygon([[coords[i] - 1, 2], [upperX - 1, 12], [upperX + 1, 12], [coords[i] + 1, 2]]);
-                // Draw the lower hash marks.
-                deviceContext.fillPolygon([[coords[i] - 1, height-2], [upperX - 1, height - 12], [upperX + 1, height - 12], [coords[i] + 1, height - 2]]);
-            }
-        }
+        screenCenterPoint = [widthDiv2, heightDiv2];
     }
 
     // Handle the update event
     function onUpdate(deviceContext) {
-        var width;
-        var height;
-        var screenWidth = deviceContext.getWidth();
-        var clockTime = System.getClockTime();
-        var minuteHandAngle;
-        var hourHandAngle;
-        var secondHand;
         var targetDeviceContext = null;
-
-        // We always want to refresh the full screen when we get a regular onUpdate call.
-        fullScreenRefresh = true;
-
-        if(null != offscreenBuffer) {
+        
+        if( null != offscreenBuffer ) {
             deviceContext.clearClip();
             curClip = null;
             // If we have an offscreen buffer that we are using to draw the background,
@@ -163,124 +199,167 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
             targetDeviceContext = deviceContext;
         }
 
-        width = targetDeviceContext.getWidth();
-        height = targetDeviceContext.getHeight();
+        var clockTime = System.getClockTime();
 
         // Fill the entire background with Black.
         targetDeviceContext.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_WHITE);
-        targetDeviceContext.fillRectangle(0, 0, deviceContext.getWidth(), deviceContext.getHeight());
-
+        targetDeviceContext.fillRectangle(0, 0, width, height);
 
         // Draw the tick marks around the edges of the screen
         drawHashMarks(targetDeviceContext);
 
         // Draw the do-not-disturb icon if we support it and the setting is enabled
-        if (null != dndIcon && System.getDeviceSettings().doNotDisturb) {
-            targetDeviceContext.drawBitmap( width * 0.75, height / 2 - 15, dndIcon);
+        if( null != dndIcon && System.getDeviceSettings().doNotDisturb ) {
+            targetDeviceContext.drawBitmap( width75, heightDiv2 - 15, dndIcon);
         }
 
         // Use white
         targetDeviceContext.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
         // Draw the 3, 6, 9, and 12 hour labels.
-        targetDeviceContext.drawText((width / 2), 0, font, "12", Graphics.TEXT_JUSTIFY_CENTER);
-        targetDeviceContext.drawText(width - 2, (height / 2)+2, font, "3", Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
-        targetDeviceContext.drawText(width / 2, height-25, font, "6", Graphics.TEXT_JUSTIFY_CENTER);
-        targetDeviceContext.drawText(2, (height / 2)+2, font, "9", Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+        targetDeviceContext.drawText((widthDiv2), 0, hoursDigitsFont, "12", Graphics.TEXT_JUSTIFY_CENTER);
+        targetDeviceContext.drawText(width - 2, heightDiv2+2, hoursDigitsFont, "3", Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
+        targetDeviceContext.drawText(widthDiv2, height-25, hoursDigitsFont, "6", Graphics.TEXT_JUSTIFY_CENTER);
+        targetDeviceContext.drawText(2, heightDiv2+2, hoursDigitsFont, "9", Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        // If we have an offscreen buffer that we are using for the date string,
-        // Draw the date into it. If we do not, the date will get drawn every update
-        // after blanking the second hand.
-/*        if( null != dateBuffer ) {
-            var dateDc = dateBuffer.getDc();
+		if( showAllHourNumbers ) {
+			// draw other smaller hour labels
+			targetDeviceContext.drawText(hourNumberLocation3, hourNumberLocation1,  Graphics.FONT_TINY, "1", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(hourNumberLocation4, hourNumberLocation2,  Graphics.FONT_TINY, "2", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(hourNumberLocation4, hourNumberLocation3, Graphics.FONT_TINY,  "4", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(hourNumberLocation3, hourNumberLocation4,  Graphics.FONT_TINY, "5", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(hourNumberLocation2, hourNumberLocation4, Graphics.FONT_TINY,  "7", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(hourNumberLocation1, hourNumberLocation3,  Graphics.FONT_TINY, "8", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(hourNumberLocation1, hourNumberLocation2, Graphics.FONT_TINY, "10", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(hourNumberLocation2, hourNumberLocation1, Graphics.FONT_TINY, "11", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+		}
 
-            //Draw the background image buffer into the date buffer to set the background
-            dateDc.drawBitmap(0, -(height / 4), offscreenBuffer);
-
-            //Draw the date string into the buffer.
-            drawDateString( dateDc, width / 2, 0 );
-        }*/
+		drawDateString( targetDeviceContext, widthDiv2, height75 );
 
 		var isBluetoothConnected= System.getDeviceSettings().phoneConnected;
 		var notificationCount = System.getDeviceSettings().notificationCount;
-		var bluetoothConnectedLocation = width/2;
-		var notificationCountLocation = width/2;
-		var bluetoothJustification = Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER;
-		var notificationJustification = Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER;
-		if( isBluetoothConnected && notificationCount > 0 ) {
-			bluetoothConnectedLocation = width/2 - 30;
-			notificationCountLocation = width/2 + 30;
-			bluetoothJustification = Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER;
-			notificationJustification = Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER;
-		}			
-
-        // Output the offscreen buffers to the main display if required (includes date)
-        drawBackground(deviceContext);
-
+		
+		var bluetoothConnectedLocationX = widthDiv2;
+		var bluetoothConnectedLocationY;
+		var notificationCountLocationX;
+		var bluetoothJustification;
+		var notificationJustification;
+		if( secondHandType == 0 ) {
+			bluetoothConnectedLocationY = notificationCountLocationY+1;
+			notificationCountLocationX = widthDiv2;
+			bluetoothJustification = Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER;
+			notificationJustification = Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER;
+			if( isBluetoothConnected && notificationCount > 0 ) {
+				bluetoothConnectedLocationX = bluetoothConnectedLocationX - bluetoothAndNotificatoinCountLocation;
+				notificationCountLocationX = notificationCountLocationX + bluetoothAndNotificatoinCountLocation;
+				bluetoothJustification = Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER;
+				notificationJustification = Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER;
+			}
+		} else {
+			bluetoothConnectedLocationY = notificationCountLocationY;
+			notificationCountLocationX = width*2/3+4;
+			bluetoothJustification = Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER;
+			notificationJustification = Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER;
+		}
+		
+        targetDeviceContext.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 		if( isBluetoothConnected ) {
-	        // Draw bluetooth connected indicator directly to the main screen.
-	        deviceContext.drawText(bluetoothConnectedLocation, 55, font, "b", bluetoothJustification);
+	        // Draw bluetooth connected indicator
+	        targetDeviceContext.drawText(bluetoothConnectedLocationX, bluetoothConnectedLocationY, hoursDigitsFont, "b", bluetoothJustification);
 	    }
 	
 		if( notificationCount > 0 ) {
-	        // Draw notification count & message bubble directly to the main screen.
-	        deviceContext.drawText(notificationCountLocation, 54, font, "m", notificationJustification);
+	        // Draw notification count & message bubble
+	        targetDeviceContext.drawText(notificationCountLocationX, notificationCountLocationY, hoursDigitsFont, "m", notificationJustification);
 	        targetDeviceContext.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-	        deviceContext.drawText(notificationCountLocation-4, 52, Graphics.FONT_TINY, notificationCount, notificationJustification);
+			if( secondHandType == 0 ) {
+				notificationCountLocationX -= 4;
+			} else {
+				notificationCountLocationX += 4;
+			}
+	        targetDeviceContext.drawText(notificationCountLocationX, notificationCountLocationY-2, Graphics.FONT_TINY, notificationCount, notificationJustification);
 	        targetDeviceContext.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 	    }
 
-        // Draw the battery percentage directly to the main screen.
-        deviceContext.drawText(195, height/2, Graphics.FONT_TINY, (System.getSystemStats().battery + 0.5).toNumber().toString() + "%", Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
+        // Draw the battery percentage
+        targetDeviceContext.drawText( batteryPercentageLocationX, heightDiv2, Graphics.FONT_TINY,
+        								(System.getSystemStats().battery + 0.5).toNumber().toString() + "%", Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        // Draw the number of steps directly to the main screen.
+        // Draw the number of steps
         var steps = ActivityMonitor.getInfo().steps.toString();
-        deviceContext.drawText(23, height/2, Graphics.FONT_TINY, steps, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+        targetDeviceContext.drawText(stepsLocationX, heightDiv2, Graphics.FONT_TINY, steps, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
 
 
         // Draw the hour hand. Convert it to minutes and compute the angle.
-        hourHandAngle = (((clockTime.hour % 12) * 60) + clockTime.min);
+        var hourHandAngle = (((clockTime.hour % 12) * 60) + clockTime.min);
         hourHandAngle = hourHandAngle / (12 * 60.0);
         hourHandAngle = hourHandAngle * Math.PI * 2;
-        var hourHandCoordinates = generateHandCoordinates(screenCenterPoint, hourHandAngle, 60, 15, 7);
+		var hourHandCoordinates = rotateHand(hourHandPoints, hourHandAngle, screenCenterPoint);
         targetDeviceContext.fillPolygon(hourHandCoordinates);
 
-        // Draw the minute hand.
-        minuteHandAngle = (clockTime.min / 60.0) * Math.PI * 2;
-        var minuteHandCoordinates = generateHandCoordinates(screenCenterPoint, minuteHandAngle, 100, 15, 5);
+		// Draw outline of hour hand
+		drawHandOutline(targetDeviceContext, hourHandCoordinates);
+
+        // Draw the minute hand
+		targetDeviceContext.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        var minuteHandAngle = (clockTime.min / 60.0) * Math.PI * 2;
+		var minuteHandCoordinates = rotateHand(minuteHandPoints, minuteHandAngle, screenCenterPoint);
         targetDeviceContext.fillPolygon(minuteHandCoordinates);
 
-		// draw red outline of hands
-		deviceContext.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-		targetDeviceContext.drawLine(hourHandCoordinates[0][0], hourHandCoordinates[0][1], hourHandCoordinates[1][0], hourHandCoordinates[1][1]);
-		targetDeviceContext.drawLine(hourHandCoordinates[1][0], hourHandCoordinates[1][1], hourHandCoordinates[2][0], hourHandCoordinates[2][1]);
-		targetDeviceContext.drawLine(hourHandCoordinates[2][0], hourHandCoordinates[2][1], hourHandCoordinates[3][0], hourHandCoordinates[3][1]);
-		targetDeviceContext.drawLine(hourHandCoordinates[3][0], hourHandCoordinates[3][1], hourHandCoordinates[0][0], hourHandCoordinates[0][1]);
-		targetDeviceContext.drawLine(minuteHandCoordinates[0][0], minuteHandCoordinates[0][1], minuteHandCoordinates[1][0], minuteHandCoordinates[1][1]);
-		targetDeviceContext.drawLine(minuteHandCoordinates[1][0], minuteHandCoordinates[1][1], minuteHandCoordinates[2][0], minuteHandCoordinates[2][1]);
-		targetDeviceContext.drawLine(minuteHandCoordinates[2][0], minuteHandCoordinates[2][1], minuteHandCoordinates[3][0], minuteHandCoordinates[3][1]);
-		targetDeviceContext.drawLine(minuteHandCoordinates[3][0], minuteHandCoordinates[3][1], minuteHandCoordinates[0][0], minuteHandCoordinates[0][1]);
-
-        if( partialUpdatesAllowed ) {
-            // If this device supports partial updates and they are currently
-            // allowed run the onPartialUpdate method to draw the second hand.
-            onPartialUpdate( deviceContext );
-        } else if ( isAwake ) {
-            // Otherwise, if we are out of sleep mode, draw the second hand
-            // directly in the full update method.
-            deviceContext.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-            secondHand = (clockTime.sec / 60.0) * Math.PI * 2;
-
-            deviceContext.fillPolygon(generateHandCoordinates(screenCenterPoint, secondHand, 100, 25, 2));
-        }
-        
+		// Draw outline of minute hand
+		drawHandOutline(targetDeviceContext, minuteHandCoordinates);
+		
         // Draw the arbor in the center of the screen.
         targetDeviceContext.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_BLACK);
-        targetDeviceContext.fillCircle(width / 2, height / 2, 7);
+        targetDeviceContext.fillCircle(widthDiv2, heightDiv2, 7);
         targetDeviceContext.setColor(Graphics.COLOR_BLACK,Graphics.COLOR_BLACK);
-        targetDeviceContext.fillCircle(width / 2, height / 2, 4);
+        targetDeviceContext.fillCircle(widthDiv2, heightDiv2, 4);
+        
+        if( partialUpdatesAllowed ) {
+            // If this device supports partial updates and they are currently allowed run the onPartialUpdate method to draw the second hand.
+            onPartialUpdate( deviceContext );
+        } else if ( isAwake ) {
+	        // Output the offscreen buffer (if used) to the main display
+	        drawOffscreenBuffer(deviceContext);
+	        
+            // In high power mode so draw the second hand directly to the screen in this full update method.
+            if( secondHandType == 0 ) {
+            	// sweep second hand type
+	            deviceContext.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
+	            var secondHandAngle = (clockTime.sec / 60.0) * Math.PI * 2;
+				var secondHandCoordinates = rotateHand(secondHandPoints, secondHandAngle, screenCenterPoint);
+	            deviceContext.fillPolygon(secondHandCoordinates);
+            } else {
+            	// dial second hand type
+	            deviceContext.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            	var seconds = getSecondsChar(clockTime.sec);
+        		deviceContext.drawText(widthDiv3, heightDiv3, secondsDialsFont, seconds, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            }
+        }
+    }
 
-        fullScreenRefresh = false;
+	function drawHandOutline(deviceContext, handCoordinates) {
+		if( handsOutlineColor != Graphics.COLOR_TRANSPARENT ) {
+			deviceContext.setColor(handsOutlineColor, Graphics.COLOR_TRANSPARENT);
+			
+			for( var i=0; i<handCoordinates.size()-1; ++i ) {
+				var secondX = i+1;
+				if( i == handCoordinates.size()-1 ) {
+					secondX = 0;
+				} 
+				deviceContext.drawLine(handCoordinates[i][0], handCoordinates[i][1], handCoordinates[secondX][0], handCoordinates[secondX][1]);
+			}
+		}	
+	}
+
+    // Draw the watch face stored in the offscreen buffer if available
+    // onUpdate() uses this method to transfer newly rendered Buffered Bitmaps to the main display.
+    // onPartialUpdate() uses this to blank the second hand from the previous second before outputing the new one.
+    function drawOffscreenBuffer(deviceContext) {
+        // If we have an offscreen buffer, draw it to the screen.
+        if( null != offscreenBuffer ) {
+            deviceContext.drawBitmap(0, 0, offscreenBuffer);
+        }
     }
 
     // Draw the date string into the provided buffer at the specified location
@@ -289,32 +368,34 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
         var dateStr = Lang.format("$1$ $2$ $3$", [info.day_of_week, info.month, info.day]);
 
         deviceContext.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-//        deviceContext.drawText(x, y, font, dateStr, Graphics.TEXT_JUSTIFY_CENTER);
         deviceContext.drawText(x, y, Graphics.FONT_TINY, dateStr, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     // Handle the partial update event
     function onPartialUpdate( deviceContext ) {
-        // If we're not doing a full screen refresh we need to re-draw the background
-        // before drawing the updated second hand position. Note this will only re-draw
-        // the background in the area specified by the previously computed clipping region.
-        if(!fullScreenRefresh) {
-            drawBackground(deviceContext);
-        }
+        // If we're not doing a full screen refresh we need to re-draw the watch face before drawing the updated second hand position.
+        // Note this will only re-draw the background in the area specified by the previously computed clipping region.
+		drawOffscreenBuffer(deviceContext);
 
         var clockTime = System.getClockTime();
-        var secondHand = (clockTime.sec / 60.0) * Math.PI * 2;
-        var secondHandPoints = generateHandCoordinates(screenCenterPoint, secondHand, 60, 20, 2);
-
-        // Update the cliping rectangle to the new location of the second hand.
-        curClip = getBoundingBox( secondHandPoints );
-        var bboxWidth = curClip[1][0] - curClip[0][0] + 1;
-        var bboxHeight = curClip[1][1] - curClip[0][1] + 1;
-        deviceContext.setClip(curClip[0][0], curClip[0][1], bboxWidth, bboxHeight);
-
-        // Draw the second hand to the screen.
-        deviceContext.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-        deviceContext.fillPolygon(secondHandPoints);
+        var secondHandAngle = (clockTime.sec / 60.0) * Math.PI * 2;
+        if( secondHandType == 0 ) {
+        	// sweep second hand type
+			var secondHandCoordinates = rotateHand(secondHandPoints, secondHandAngle, screenCenterPoint);
+	
+	        // Update the clipping rectangle to the new location of the second hand.
+	        curClip = getBoundingBox( secondHandCoordinates );
+	        var bboxWidth = curClip[1][0] - curClip[0][0] + 1;
+	        var bboxHeight = curClip[1][1] - curClip[0][1] + 1;
+	        deviceContext.setClip(curClip[0][0], curClip[0][1], bboxWidth, bboxHeight);
+	
+	        // Draw the second hand to the screen.
+	        deviceContext.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
+	        deviceContext.fillPolygon(secondHandCoordinates);
+		} else {
+           	// dial second hand type
+       		deviceContext.drawText(widthDiv3, heightDiv3, secondsDialsFont, "0", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+		}
     }
 
     // Compute a bounding box from the passed in points
@@ -343,29 +424,57 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
         return [min, max];
     }
 
-    // Draw the watch face background
-    // onUpdate uses this method to transfer newly rendered Buffered Bitmaps
-    // to the main display.
-    // onPartialUpdate uses this to blank the second hand from the previous
-    // second before outputing the new one.
-    function drawBackground(deviceContext) {
-        var width = deviceContext.getWidth();
-        var height = deviceContext.getHeight();
+	function rotateHand(handPoints, angle, centerPoint) {
+        var result = new [handPoints.size()];
+        var cos = Math.cos(angle);
+        var sin = Math.sin(angle);
 
-        //If we have an offscreen buffer that has been written to
-        //draw it to the screen.
-        if( null != offscreenBuffer ) {
-            deviceContext.drawBitmap(0, 0, offscreenBuffer);
+        // Transform the coordinates
+        for (var i = 0; i < handPoints.size(); i += 1) {
+            var x = (handPoints[i][0] * cos) - (handPoints[i][1] * sin) + 0.5;
+            var y = (handPoints[i][0] * sin) + (handPoints[i][1] * cos) + 0.5;
+
+            result[i] = [centerPoint[0] + x, centerPoint[1] + y];
         }
 
-        // Draw the date
-        if( null != dateBuffer ) {
-            // If the date is saved in a Buffered Bitmap, just copy it from there.
-            deviceContext.drawBitmap(0, (height / 4), dateBuffer );
+        return result;
+    }
+    
+    // Draws the clock tick marks around the outside edges of the screen.
+    function drawHashMarks(deviceContext) {
+        deviceContext.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
+
+        // Draw hashmarks differently depending on screen geometry.
+        if (System.SCREEN_SHAPE_ROUND == screenShape) {
+            var sX, sY;
+            var eX, eY;
+            var outerRad = widthDiv2;
+            var innerRad = outerRad - 10;	// length of hashmark
+            // Loop through each 15 minute block and draw tick marks.
+            for (var i = Math.PI / 6; i <= 11 * Math.PI / 6; i += (Math.PI / 3)) {
+                // Partially unrolled loop to draw two tickmarks in 15 minute block.
+                sY = outerRad + innerRad * Math.sin(i);
+                eY = outerRad + outerRad * Math.sin(i);
+                sX = outerRad + innerRad * Math.cos(i);
+                eX = outerRad + outerRad * Math.cos(i);
+                deviceContext.drawLine(sX, sY, eX, eY);
+                i += Math.PI / 6;
+                sY = outerRad + innerRad * Math.sin(i);
+                eY = outerRad + outerRad * Math.sin(i);
+                sX = outerRad + innerRad * Math.cos(i);
+                eX = outerRad + outerRad * Math.cos(i);
+                deviceContext.drawLine(sX, sY, eX, eY);
+            }
         } else {
-            // Otherwise, draw it from scratch.
-//            drawDateString( deviceContext, width / 2, height / 4 );
-            drawDateString( deviceContext, width/2, 163 );
+            var coords = [0, width / 4, (3 * width) / 4, width];
+            for (var i = 0; i < coords.size(); i += 1) {
+                var dx = (widthDiv2 - coords[i]) / heightDiv2;
+                var upperX = coords[i] + (dx * 10);
+                // Draw the upper hash marks.
+                deviceContext.fillPolygon([[coords[i] - 1, 2], [upperX - 1, 12], [upperX + 1, 12], [coords[i] + 1, 2]]);
+                // Draw the lower hash marks.
+                deviceContext.fillPolygon([[coords[i] - 1, height-2], [upperX - 1, height - 12], [upperX + 1, height - 12], [coords[i] + 1, height - 2]]);
+            }
         }
     }
 
@@ -381,13 +490,136 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
     function onExitSleep() {
         isAwake = true;
     }
+    
+    function getSecondsChar(seconds) {
+    	if( seconds == 0 ) {
+    		return "0";
+    	} else if( seconds == 1 ) {
+    		return "1";
+    	} else if( seconds == 2 ) {
+    		return "2";
+    	} else if( seconds == 3 ) {
+    		return "3";
+    	} else if( seconds == 4 ) {
+    		return "4";
+    	} else if( seconds == 5 ) {
+    		return "5";
+    	} else if( seconds == 6 ) {
+    		return "6";
+    	} else if( seconds == 7 ) {
+    		return "7";
+    	} else if( seconds == 8 ) {
+    		return "8";
+    	} else if( seconds == 9 ) {
+    		return "9";
+    	} else if( seconds == 10 ) {
+    		return "!";
+    	} else if( seconds == 11 ) {
+    		return "\"";
+    	} else if( seconds == 12 ) {
+    		return "#";
+    	} else if( seconds == 13 ) {
+    		return "$";
+    	} else if( seconds == 14 ) {
+    		return "%";
+    	} else if( seconds == 15 ) {
+    		return "&";
+    	} else if( seconds == 16 ) {
+    		return "'";
+    	} else if( seconds == 17 ) {
+    		return "(";
+    	} else if( seconds == 18 ) {
+    		return ")";
+    	} else if( seconds == 19 ) {
+    		return "*";
+    	} else if( seconds == 20 ) {
+    		return "+";
+    	} else if( seconds == 21 ) {
+    		return ",";
+    	} else if( seconds == 22 ) {
+    		return "-";
+    	} else if( seconds == 23 ) {
+    		return ".";
+    	} else if( seconds == 24 ) {
+    		return "/";
+    	} else if( seconds == 25 ) {
+    		return ":";
+    	} else if( seconds == 26 ) {
+    		return ";";
+    	} else if( seconds == 27 ) {
+    		return "<";
+    	} else if( seconds == 28 ) {
+    		return "=";
+    	} else if( seconds == 29 ) {
+    		return "?";
+    	} else if( seconds == 30 ) {
+    		return "@";
+    	} else if( seconds == 31 ) {
+    		return "A";
+    	} else if( seconds == 32 ) {
+    		return "B";
+    	} else if( seconds == 33 ) {
+    		return "C";
+    	} else if( seconds == 34 ) {
+    		return "D";
+    	} else if( seconds == 35 ) {
+    		return "E";
+    	} else if( seconds == 36 ) {
+    		return "F";
+    	} else if( seconds == 37 ) {
+    		return "G";
+    	} else if( seconds == 38 ) {
+    		return "H";
+    	} else if( seconds == 39 ) {
+    		return "I";
+    	} else if( seconds == 40 ) {
+    		return "J";
+    	} else if( seconds == 41 ) {
+    		return "K";
+    	} else if( seconds == 42 ) {
+    		return "L";
+    	} else if( seconds == 43 ) {
+    		return "M";
+    	} else if( seconds == 44 ) {
+    		return "N";
+    	} else if( seconds == 45 ) {
+    		return "O";
+    	} else if( seconds == 46 ) {
+    		return "P";
+    	} else if( seconds == 47 ) {
+    		return "Q";
+    	} else if( seconds == 48 ) {
+    		return "R";
+    	} else if( seconds == 49 ) {
+    		return "S";
+    	} else if( seconds == 50 ) {
+    		return "T";
+    	} else if( seconds == 51 ) {
+    		return "U";
+    	} else if( seconds == 52 ) {
+    		return "V";
+    	} else if( seconds == 53 ) {
+    		return "W";
+    	} else if( seconds == 54 ) {
+    		return "X";
+    	} else if( seconds == 55 ) {
+    		return "Y";
+    	} else if( seconds == 56 ) {
+    		return "Z";
+    	} else if( seconds == 57 ) {
+    		return "[";
+    	} else if( seconds == 58 ) {
+    		return "\\";
+    	} else {
+    		return "]";
+    	}
+    }
 }
 
+
 class AnalogDelegate extends WatchUi.WatchFaceDelegate {
-    // The onPowerBudgetExceeded callback is called by the system if the
-    // onPartialUpdate method exceeds the allowed power budget. If this occurs,
-    // the system will stop invoking onPartialUpdate each second, so we set the
-    // partialUpdatesAllowed flag here to let the rendering methods know they
+    // The onPowerBudgetExceeded callback is called by the system if the onPartialUpdate() method exceeds the allowed power budget.
+    // If this occurs, the system will stop invoking onPartialUpdate each second, so we set the partialUpdatesAllowed flag here to let the rendering methods know they
     // should not be rendering a second hand.
     function onPowerBudgetExceeded(powerInfo) {
         System.println( "Average execution time: " + powerInfo.executionTimeAverage );
