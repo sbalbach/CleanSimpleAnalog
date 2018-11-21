@@ -64,10 +64,10 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
         secondHandType = app.getProperty("secondHandType");
         showAllHourNumbers = app.getProperty("showAllHourNumbers");
 /* for testing...        
-*/       handsOutline = 5;
+       handsOutline = 5;
         hourHashMarks = 9;
         secondHandType = 1;
-
+*/
 		handsOutlineColor = getColor(handsOutline);
 		hourHashMarksColor = getColor(hourHashMarks);
     }
