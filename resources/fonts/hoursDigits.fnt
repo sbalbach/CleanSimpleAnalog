@@ -9,3 +9,4 @@ char id=50    x=45    y=0     width=12    height=15    xoffset=0     yoffset=6  
 char id=49    x=58    y=0     width=10    height=15    xoffset=0     yoffset=6     xadvance=12    page=0  chnl=15
 char id=98    x=69    y=0     width=9     height=15    xoffset=0     yoffset=6     xadvance=11    page=0  chnl=15
 char id=109   x=79    y=0     width=26    height=20    xoffset=0     yoffset=6     xadvance=26    page=0  chnl=15
+char id=110   x=105   y=0     width=32    height=26    xoffset=0     yoffset=6     xadvance=32    page=0  chnl=15
