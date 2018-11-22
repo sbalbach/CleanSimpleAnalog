@@ -64,9 +64,10 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
         secondHandType = app.getProperty("secondHandType");
         showAllHourNumbers = app.getProperty("showAllHourNumbers");
 /* for testing...        
-       handsOutline = 5;
-        hourHashMarks = 9;
-        secondHandType = 1;
+      showAllHourNumbers = false;
+		handsOutline = 8;
+        hourHashMarks = 8;
+        secondHandType = 0;
 */
 		handsOutlineColor = getColor(handsOutline);
 		hourHashMarksColor = getColor(hourHashMarks);
@@ -577,67 +578,69 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
     	} else if( seconds == 28 ) {
     		return "=";
     	} else if( seconds == 29 ) {
-    		return "?";
+    		return ">";
     	} else if( seconds == 30 ) {
-    		return "@";
+    		return "?";
     	} else if( seconds == 31 ) {
-    		return "A";
+    		return "@";
     	} else if( seconds == 32 ) {
-    		return "B";
+    		return "A";
     	} else if( seconds == 33 ) {
-    		return "C";
+    		return "B";
     	} else if( seconds == 34 ) {
-    		return "D";
+    		return "C";
     	} else if( seconds == 35 ) {
-    		return "E";
+    		return "D";
     	} else if( seconds == 36 ) {
-    		return "F";
+    		return "E";
     	} else if( seconds == 37 ) {
-    		return "G";
+    		return "F";
     	} else if( seconds == 38 ) {
-    		return "H";
+    		return "G";
     	} else if( seconds == 39 ) {
-    		return "I";
+    		return "H";
     	} else if( seconds == 40 ) {
-    		return "J";
+    		return "I";
     	} else if( seconds == 41 ) {
-    		return "K";
+    		return "J";
     	} else if( seconds == 42 ) {
-    		return "L";
+    		return "K";
     	} else if( seconds == 43 ) {
-    		return "M";
+    		return "L";
     	} else if( seconds == 44 ) {
-    		return "N";
+    		return "M";
     	} else if( seconds == 45 ) {
-    		return "O";
+    		return "N";
     	} else if( seconds == 46 ) {
-    		return "P";
+    		return "O";
     	} else if( seconds == 47 ) {
-    		return "Q";
+    		return "P";
     	} else if( seconds == 48 ) {
-    		return "R";
+    		return "Q";
     	} else if( seconds == 49 ) {
-    		return "S";
+    		return "R";
     	} else if( seconds == 50 ) {
-    		return "T";
+    		return "S";
     	} else if( seconds == 51 ) {
-    		return "U";
+    		return "T";
     	} else if( seconds == 52 ) {
-    		return "V";
+    		return "U";
     	} else if( seconds == 53 ) {
-    		return "W";
+    		return "V";
     	} else if( seconds == 54 ) {
-    		return "X";
+    		return "W";
     	} else if( seconds == 55 ) {
-    		return "Y";
+    		return "X";
     	} else if( seconds == 56 ) {
-    		return "Z";
+    		return "Y";
     	} else if( seconds == 57 ) {
-    		return "[";
+    		return "Z";
     	} else if( seconds == 58 ) {
+    		return "[";
+    	} else if( seconds == 59 ) {
     		return "\\";
     	} else {
-    		return "]";
+    		return "0";
     	}
     }
 }
