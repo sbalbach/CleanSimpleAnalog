@@ -1,6 +1,7 @@
 <resources>
 	
     <string id="AppName">CleanSimpleAnalog</string>
+	<string id="secondHandColor">Second Hand Color</string>
 	<string id="handsOutline">Outline of Hands</string>
 	<string id="hourHashMarks">Hour Hash Marks</string>
 	<string id="secondHandType">Second Hand Type</string>
@@ -27,6 +28,7 @@
 	
 	<properties>
 	    <property id="appVersion" type="string">0.0.1</property>
+	    <property id="secondHandColor" type="number">5</property>
 	    <property id="handsOutline" type="number">0</property>
 	    <property id="hourHashMarks" type="number">0</property>
 	    <property id="secondHandType" type="number">0</property>
@@ -36,6 +38,24 @@
 	<settings>
 	    <setting propertyKey="@Properties.appVersion" title="@Strings.AppName">
 	        <settingConfig type="alphaNumeric" readonly="true" />
+	    </setting>
+	
+	    <setting propertyKey="@Properties.secondHandColor" title="@Strings.secondHandColor">
+	        <settingConfig type="list">
+	            <listEntry value="1">@Strings.white</listEntry>
+	            <listEntry value="2">@Strings.lightGray</listEntry>
+	            <listEntry value="3">@Strings.darkGray</listEntry>
+	            <listEntry value="5">@Strings.red</listEntry>
+	            <listEntry value="6">@Strings.darkRed</listEntry>
+	            <listEntry value="7">@Strings.orange</listEntry>
+	            <listEntry value="8">@Strings.yellow</listEntry>
+	            <listEntry value="9">@Strings.green</listEntry>
+	            <listEntry value="10">@Strings.darkGreen</listEntry>
+	            <listEntry value="11">@Strings.blue</listEntry>
+	            <listEntry value="12">@Strings.darkBlue</listEntry>
+	            <listEntry value="13">@Strings.purple</listEntry>
+	            <listEntry value="14">@Strings.pink</listEntry>
+	        </settingConfig>
 	    </setting>
 	
 	    <setting propertyKey="@Properties.handsOutline" title="@Strings.handsOutline">

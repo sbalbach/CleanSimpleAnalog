@@ -27,6 +27,7 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
     var widthDiv3;
     var heightDiv3;
     var width75;
+    var secondHandColor;
 	var handsOutlineColor;
 	var hourHashMarksColor;
     var secondHandType;
@@ -59,16 +60,19 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
         }
         
         var app = Application.getApp();
+        var secondHand = app.getProperty("secondHandColor");
         var handsOutline = app.getProperty("handsOutline");
         var hourHashMarks = app.getProperty("hourHashMarks");
         secondHandType = app.getProperty("secondHandType");
         showAllHourNumbers = app.getProperty("showAllHourNumbers");
-/* for testing...        
-      showAllHourNumbers = false;
+ //for testing...
+/* 		secondHand = 8;
+      	showAllHourNumbers = false;
 		handsOutline = 8;
         hourHashMarks = 8;
         secondHandType = 0;
 */
+		secondHandColor = getColor(secondHand);
 		handsOutlineColor = getColor(handsOutline);
 		hourHashMarksColor = getColor(hourHashMarks);
     }
@@ -313,7 +317,7 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
             // In high power mode so draw the second hand directly to the screen in this full update method.
             if( secondHandType == 0 ) {
             	// sweep second hand type
-	            deviceContext.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
+	            deviceContext.setColor(secondHandColor, Graphics.COLOR_TRANSPARENT);
 	            var secondHandAngle = (clockTime.sec / 60.0) * Math.PI * 2;
 				var secondHandCoordinates = rotateHand(secondHandPoints, secondHandAngle, screenCenterPoint);
 	            deviceContext.fillPolygon(secondHandCoordinates);
@@ -408,7 +412,7 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
 	        deviceContext.setClip(curClip[0][0], curClip[0][1], bboxWidth, bboxHeight);
 	
 	        // Draw the second hand to the screen.
-	        deviceContext.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
+	        deviceContext.setColor(secondHandColor, Graphics.COLOR_TRANSPARENT);
 	        deviceContext.fillPolygon(secondHandCoordinates);
 		} else {
            	// dial second hand type
