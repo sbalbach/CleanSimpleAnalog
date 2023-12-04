@@ -7,6 +7,16 @@ using Toybox.Time.Gregorian;
 using Toybox.WatchUi;
 using Toybox.Application;
 
+/*************************************************************************************************
+ * To build for a particular product: right click a *.mc file and select "Build Current Project"
+ * To run the built project: F11 or Ctrl-F11 (under Run menu)
+ * To update the supported products: Ctrl-Shift-P and select/enter "Monkey C: Edit Products"
+ * To change compiler options (developer key path, optimizations): File/Preferences/Settings -> Extensions/Monkey C
+ *************************************************************************************************/
+
+// Global variables
+var partialUpdatesAllowed;
+
 // This implements an analog watch face
 // Original design by Austen Harbour
 class CleanSimpleAnalogView extends WatchUi.WatchFace {
@@ -15,7 +25,6 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
     var isAwake = false;
     var screenShape;
     var dndIcon;
-    var partialUpdatesAllowed;
     var offscreenBuffer;
     var needsClip = false;
     var curClip;
@@ -27,11 +36,18 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
     var widthDiv3;
     var heightDiv3;
     var width75;
+    // settings
     var secondHandColor;
 	var handsOutlineColor;
 	var hourHashMarksColor;
     var secondHandType;
     var showAllHourNumbers;
+    var showBluetoothConnected;
+    var showNotificationCount;
+    var showStepCount;
+    var showBatteryPercentage;
+    var showDate;
+    
     var hourNumberLocation1;
     var hourNumberLocation2;
     var hourNumberLocation3;
@@ -65,13 +81,23 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
         var hourHashMarks = app.getProperty("hourHashMarks");
         secondHandType = app.getProperty("secondHandType");
         showAllHourNumbers = app.getProperty("showAllHourNumbers");
- //for testing...
+        showBluetoothConnected = app.getProperty("showBluetoothConnected");
+        showNotificationCount = app.getProperty("showNotificationCount");
+        showStepCount = app.getProperty("showStepCount");
+        showBatteryPercentage = app.getProperty("showBatteryPercentage");
+        showDate = app.getProperty("showDate");
+ //for testing===============================
 /* 		secondHand = 8;
-      	showAllHourNumbers = false;
 		handsOutline = 8;
         hourHashMarks = 8;
         secondHandType = 0;
-*/
+      	showAllHourNumbers = false;
+      	showBluetoothConnected = false;
+      	showNotificationCount = true;
+      	showStepCount = false;
+      	showBatteryPercentage = false;
+      	showDate = true;*/
+//============================================
 		secondHandColor = getColor(secondHand);
 		handsOutlineColor = getColor(handsOutline);
 		hourHashMarksColor = getColor(hourHashMarks);
@@ -246,10 +272,18 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
 			targetDeviceContext.drawText(hourNumberLocation2, hourNumberLocation1, Graphics.FONT_TINY, "11", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 		}
 
-		drawDateString( targetDeviceContext, widthDiv2, hourNumberLocation3 );
+		if( showDate ) {
+			drawDateString( targetDeviceContext, widthDiv2, hourNumberLocation3 );
+		}
 
-		var isBluetoothConnected= System.getDeviceSettings().phoneConnected;
-		var notificationCount = System.getDeviceSettings().notificationCount;
+		var isBluetoothConnected = false;
+		if( showBluetoothConnected ) {
+			isBluetoothConnected = System.getDeviceSettings().phoneConnected;
+		}
+		var notificationCount = 0;
+		if( showNotificationCount ) {
+			notificationCount = System.getDeviceSettings().notificationCount;
+		}
 		
 		var bluetoothConnectedLocationX = widthDiv2;
 		var bluetoothConnectedLocationY;
@@ -295,13 +329,17 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
 	        targetDeviceContext.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 	    }
 
-        // Draw the battery percentage
-        targetDeviceContext.drawText( batteryPercentageLocationX, heightDiv2, Graphics.FONT_TINY,
-        								(System.getSystemStats().battery + 0.5).toNumber().toString() + "%", Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
+		if( showBatteryPercentage ) {
+	        // Draw the battery percentage
+	        targetDeviceContext.drawText( batteryPercentageLocationX, heightDiv2, Graphics.FONT_TINY,
+	        								(System.getSystemStats().battery + 0.5).toNumber().toString() + "%", Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
+	    }
 
-        // Draw the number of steps
-        var steps = ActivityMonitor.getInfo().steps.toString();
-        targetDeviceContext.drawText(stepsLocationX, heightDiv2, Graphics.FONT_TINY, steps, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+		if( showStepCount ) {		
+	        // Draw the number of steps
+	        var steps = ActivityMonitor.getInfo().steps.toString();
+	        targetDeviceContext.drawText(stepsLocationX, heightDiv2, Graphics.FONT_TINY, steps, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+	    }
 
 		drawHourAndMinuteHands(targetDeviceContext, clockTime);
 		
@@ -651,6 +689,10 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
 
 
 class AnalogDelegate extends WatchUi.WatchFaceDelegate {
+    function initialize() {
+        WatchUi.WatchFaceDelegate.initialize();
+    }
+
     // The onPowerBudgetExceeded callback is called by the system if the onPartialUpdate() method exceeds the allowed power budget.
     // If this occurs, the system will stop invoking onPartialUpdate each second, so we set the partialUpdatesAllowed flag here to let the rendering methods know they
     // should not be rendering a second hand.

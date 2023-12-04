@@ -6,7 +6,12 @@
 	<string id="hourHashMarks">Hour Hash Marks</string>
 	<string id="secondHandType">Second Hand Type</string>
 	<string id="showAllHourNumbers">Show all Hour Numbers</string>
-	
+	<string id="showBluetoothConnected">Show Bluetooth connected</string>
+	<string id="showNotificationCount">Show Notification Count</string>
+	<string id="showStepCount">Show Step Count</string>
+	<string id="showBatteryPercentage">Show Battery Percentage</string>
+	<string id="showDate">Show Date</string>
+						
 	<string id="sweep">Sweep</string>
 	<string id="dial">Dial</string>
 	
@@ -33,6 +38,11 @@
 	    <property id="hourHashMarks" type="number">0</property>
 	    <property id="secondHandType" type="number">0</property>
 	    <property id="showAllHourNumbers" type="boolean">false</property>
+	    <property id="showBluetoothConnected" type="boolean">true</property>
+		<property id="showNotificationCount" type="boolean">true</property>
+		<property id="showStepCount" type="boolean">true</property>
+		<property id="showBatteryPercentage" type="boolean">true</property>
+		<property id="showDate" type="boolean">true</property>
 	</properties>
 	
 	<settings>
@@ -108,6 +118,27 @@
 	    <setting propertyKey="@Properties.showAllHourNumbers" title="@Strings.showAllHourNumbers">
 	        <settingConfig type="boolean" />
 	    </setting>
+
+	    <setting propertyKey="@Properties.showBluetoothConnected" title="@Strings.showBluetoothConnected">
+	        <settingConfig type="boolean" />
+	    </setting>
+	    
+	    <setting propertyKey="@Properties.showNotificationCount" title="@Strings.showNotificationCount">
+	        <settingConfig type="boolean" />
+	    </setting>
+	    
+	    <setting propertyKey="@Properties.showStepCount" title="@Strings.showStepCount">
+	        <settingConfig type="boolean" />
+	    </setting>
+	    
+	    <setting propertyKey="@Properties.showBatteryPercentage" title="@Strings.showBatteryPercentage">
+	        <settingConfig type="boolean" />
+	    </setting>
+	    
+	    <setting propertyKey="@Properties.showDate" title="@Strings.showDate">
+	        <settingConfig type="boolean" />
+	    </setting>
+	    
 	</settings>
 	
 	<fonts>
