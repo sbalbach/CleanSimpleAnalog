@@ -9,9 +9,9 @@ using Toybox.Application;
 
 /*************************************************************************************************
  * To build for a particular product: right click a *.mc file and select "Build Current Project"
- * To run the built project: F11 or Ctrl-F11 (under Run menu)
- * To update the supported products: Ctrl-Shift-P and select/enter "Monkey C: Edit Products"
- * To change compiler options (developer key path, optimizations): File/Preferences/Settings -> Extensions/Monkey C
+ * To run the built project: F5 or Ctrl-F5 (under Run menu)
+ * To update the supported products: Ctrl-Shift-P and select/enter "Monkey C: Edit Products" or change in manifest.xml
+ * To change compiler options (developer key path, optimizations): File/Preferences/Settings -> Extensions/Monkey C or change monkey.jungle
  *************************************************************************************************/
 
 // Global variables
