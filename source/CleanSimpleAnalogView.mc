@@ -12,6 +12,12 @@ using Toybox.Application;
  * To run the built project: F5 or Ctrl-F5 (under Run menu)
  * To update the supported products: Ctrl-Shift-P and select/enter "Monkey C: Edit Products" or change in manifest.xml
  * To change compiler options (developer key path, optimizations): File/Preferences/Settings -> Extensions/Monkey C or change monkey.jungle
+ *
+ * To change user settings, use the Garmin Connect IQ app (this is tied to the store so if app is screwed up in store it will break all users):
+ *  select Device bottom right; select My Watch Faces; select watch face; click blue Settings button
+ *
+ * To install beta version, download the watch face from Connect IQ Developer dashboard then use
+ *  Garmin Express to install on watch (watch must be connected to PC)
  *************************************************************************************************/
 
 // Global variables
@@ -40,8 +46,10 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
     var secondHandColor;
 	var handsOutlineColor;
 	var hourHashMarksColor;
+	var minuteHashMarksColor;
     var secondHandType;
     var showAllHourNumbers;
+	var showMinuteNumbers;
     var showBluetoothConnected;
     var showNotificationCount;
     var showStepCount;
@@ -52,6 +60,10 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
     var hourNumberLocation2;
     var hourNumberLocation3;
     var hourNumberLocation4;
+    var minuteNumberLocation1;
+    var minuteNumberLocation2;
+    var minuteNumberLocation3;
+    var minuteNumberLocation4;
     var bluetoothAndNotificatoinCountLocation;
 	var dialNotificationCountLocationX;
 	var notificationCountLocationXOffset;
@@ -79,28 +91,35 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
         var secondHand = app.getProperty("secondHandColor");
         var handsOutline = app.getProperty("handsOutline");
         var hourHashMarks = app.getProperty("hourHashMarks");
+        var minuteHashMarks = app.getProperty("minuteHashMarks");
         secondHandType = app.getProperty("secondHandType");
         showAllHourNumbers = app.getProperty("showAllHourNumbers");
+		showMinuteNumbers = app.getProperty("showMinuteNumbers");
         showBluetoothConnected = app.getProperty("showBluetoothConnected");
         showNotificationCount = app.getProperty("showNotificationCount");
         showStepCount = app.getProperty("showStepCount");
         showBatteryPercentage = app.getProperty("showBatteryPercentage");
         showDate = app.getProperty("showDate");
- //for testing===============================
-/* 		secondHand = 8;
-		handsOutline = 8;
-        hourHashMarks = 8;
+// for testing===============================
+/*
+ 		secondHand = 6;
+		handsOutline = 6;
+        hourHashMarks = 6;
+		minuteHashMarks = 0;
         secondHandType = 0;
-      	showAllHourNumbers = false;
-      	showBluetoothConnected = false;
+      	showAllHourNumbers = true;
+		showMinuteNumbers = false;
+      	showBluetoothConnected = true;
       	showNotificationCount = true;
-      	showStepCount = false;
-      	showBatteryPercentage = false;
-      	showDate = true;*/
+      	showStepCount = true;
+      	showBatteryPercentage = true;
+      	showDate = true;
+*/
 //============================================
 		secondHandColor = getColor(secondHand);
 		handsOutlineColor = getColor(handsOutline);
 		hourHashMarksColor = getColor(hourHashMarks);
+		minuteHashMarksColor = getColor(minuteHashMarks);
     }
 
     // Configure the layout of the watchface for this device
@@ -141,11 +160,16 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
 		hourNumberLocation3 = height-hourNumberLocation2;
 		hourNumberLocation4 = height-hourNumberLocation1;
 
+		minuteNumberLocation1 = height/10.2;
+		minuteNumberLocation2 = height/3.8;
+		minuteNumberLocation3 = height-minuteNumberLocation2;
+		minuteNumberLocation4 = height-minuteNumberLocation1;
+
 		bluetoothAndNotificatoinCountLocation = height/7.26;
 		dialNotificationCountLocationX = width*2/3+4;
 		notificationCountLocationY = height/4;
-		batteryPercentageLocationX = width/1.12;
-		stepsLocationX = width/9.5;
+		batteryPercentageLocationX = width/1.17;
+		stepsLocationX = width/7.5;
         if( width > 218 ) {
         	bubble = "n";
         	notificationCountLocationXOffset = 3;
@@ -255,10 +279,17 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
         targetDeviceContext.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
         // Draw the 3, 6, 9, and 12 hour labels.
-        targetDeviceContext.drawText((widthDiv2), 0, hoursDigitsFont, "12", Graphics.TEXT_JUSTIFY_CENTER);
-        targetDeviceContext.drawText(width - 2, heightDiv2+2, hoursDigitsFont, "3", Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
-        targetDeviceContext.drawText(widthDiv2, height-25, hoursDigitsFont, "6", Graphics.TEXT_JUSTIFY_CENTER);
-        targetDeviceContext.drawText(2, heightDiv2+2, hoursDigitsFont, "9", Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+		if( showMinuteNumbers ) {
+			targetDeviceContext.drawText(widthDiv2, 4, hoursDigitsFont, "12", Graphics.TEXT_JUSTIFY_CENTER);
+			targetDeviceContext.drawText(width-13, heightDiv2+2, hoursDigitsFont, "3", Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(widthDiv2, height-33, hoursDigitsFont, "6", Graphics.TEXT_JUSTIFY_CENTER);
+			targetDeviceContext.drawText(13, heightDiv2+2, hoursDigitsFont, "9", Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+		} else {
+			targetDeviceContext.drawText((widthDiv2), 0, hoursDigitsFont, "12", Graphics.TEXT_JUSTIFY_CENTER);
+			targetDeviceContext.drawText(width - 2, heightDiv2+2, hoursDigitsFont, "3", Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(widthDiv2, height-25, hoursDigitsFont, "6", Graphics.TEXT_JUSTIFY_CENTER);
+			targetDeviceContext.drawText(2, heightDiv2+2, hoursDigitsFont, "9", Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+		}
 
 		if( showAllHourNumbers ) {
 			// draw other smaller hour labels
@@ -270,6 +301,22 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
 			targetDeviceContext.drawText(hourNumberLocation1, hourNumberLocation3,  Graphics.FONT_TINY, "8", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 			targetDeviceContext.drawText(hourNumberLocation1, hourNumberLocation2, Graphics.FONT_TINY, "10", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 			targetDeviceContext.drawText(hourNumberLocation2, hourNumberLocation1, Graphics.FONT_TINY, "11", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+		}
+
+		if( showMinuteNumbers ) {
+			// draw smaller minute labels
+			targetDeviceContext.drawText(widthDiv2, 4,  Graphics.FONT_XTINY, "60", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(minuteNumberLocation3, minuteNumberLocation1,  Graphics.FONT_XTINY, "05", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(minuteNumberLocation4, minuteNumberLocation2, Graphics.FONT_XTINY,  "10", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(width-6, heightDiv2,  Graphics.FONT_XTINY, "15", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(minuteNumberLocation4, minuteNumberLocation3, Graphics.FONT_XTINY,  "20", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(minuteNumberLocation3, minuteNumberLocation4,  Graphics.FONT_XTINY, "25", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(widthDiv2, height-6, Graphics.FONT_XTINY, "30", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(minuteNumberLocation2, minuteNumberLocation4, Graphics.FONT_XTINY, "35", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(minuteNumberLocation1, minuteNumberLocation3, Graphics.FONT_XTINY, "40", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(6, heightDiv2, Graphics.FONT_XTINY, "45", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(minuteNumberLocation1, minuteNumberLocation2, Graphics.FONT_XTINY, "50", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+			targetDeviceContext.drawText(minuteNumberLocation2, minuteNumberLocation1, Graphics.FONT_XTINY, "55", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 		}
 
 		if( showDate ) {
@@ -516,23 +563,59 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
 	        if (System.SCREEN_SHAPE_ROUND == screenShape) {
 	            var sX, sY;
 	            var eX, eY;
-	            var outerRad = widthDiv2;
-	            var innerRad = outerRad - 10;	// length of hashmark
+	            var outerRadius = widthDiv2;
+	            var innerRadius = outerRadius - 10;	// length of hashmark
 	            // Loop through each 15 minute block and draw tick marks.
 	            for (var i = Math.PI / 6; i <= 11 * Math.PI / 6; i += (Math.PI / 3)) {
 	                // Partially unrolled loop to draw two tickmarks in 15 minute block.
-	                sY = outerRad + innerRad * Math.sin(i);
-	                eY = outerRad + outerRad * Math.sin(i);
-	                sX = outerRad + innerRad * Math.cos(i);
-	                eX = outerRad + outerRad * Math.cos(i);
+	                sX = outerRadius + innerRadius * Math.cos(i);
+	                eX = outerRadius + outerRadius * Math.cos(i);
+	                sY = outerRadius + innerRadius * Math.sin(i);
+	                eY = outerRadius + outerRadius * Math.sin(i);
 	                deviceContext.drawLine(sX, sY, eX, eY);
 	                i += Math.PI / 6;
-	                sY = outerRad + innerRad * Math.sin(i);
-	                eY = outerRad + outerRad * Math.sin(i);
-	                sX = outerRad + innerRad * Math.cos(i);
-	                eX = outerRad + outerRad * Math.cos(i);
+	                sX = outerRadius + innerRadius * Math.cos(i);
+	                eX = outerRadius + outerRadius * Math.cos(i);
+	                sY = outerRadius + innerRadius * Math.sin(i);
+	                eY = outerRadius + outerRadius * Math.sin(i);
 	                deviceContext.drawLine(sX, sY, eX, eY);
 	            }
+	        } else {
+	            var coords = [0, width / 4, (3 * width) / 4, width];
+	            for (var i = 0; i < coords.size(); i += 1) {
+	                var dx = (widthDiv2 - coords[i]) / heightDiv2;
+	                var upperX = coords[i] + (dx * 10);
+	                // Draw the upper hash marks.
+	                deviceContext.fillPolygon([[coords[i] - 1, 2], [upperX - 1, 12], [upperX + 1, 12], [coords[i] + 1, 2]]);
+	                // Draw the lower hash marks.
+	                deviceContext.fillPolygon([[coords[i] - 1, height-2], [upperX - 1, height - 12], [upperX + 1, height - 12], [coords[i] + 1, height - 2]]);
+	            }
+	        }
+		}
+
+    	if( minuteHashMarksColor != Graphics.COLOR_TRANSPARENT ) {
+	        deviceContext.setColor(minuteHashMarksColor, Graphics.COLOR_TRANSPARENT);
+	
+	        // Draw hashmarks differently depending on screen geometry.
+	        if (System.SCREEN_SHAPE_ROUND == screenShape) {
+	            var sX, sY;
+	            var eX, eY;
+	            var outerRadius = widthDiv2;
+	            var innerRadius = outerRadius - 7;	// length of hashmark
+				// 60 hash marks (skipping every 5 minutes)
+				for (var m=1; m<60; ++m ) {
+					if (m % 5 != 0 ) {
+						var angle = m*0.10472-1.5708;				// m*6-90 in degrees
+						var cosAngle = Math.cos(angle);
+						var sinAngle = Math.sin(angle);
+						// Note that centerX & centerY are both widthDiv2 (first var in expression below)
+						sX = widthDiv2 + innerRadius * cosAngle;	// start x
+						eX = widthDiv2 + outerRadius * cosAngle;	// end x
+						sY = widthDiv2 + innerRadius * sinAngle;	// start y
+						eY = widthDiv2 + outerRadius * sinAngle;	// end y
+						deviceContext.drawLine(sX, sY, eX, eY);		// draw hash mark line
+					}
+				}
 	        } else {
 	            var coords = [0, width / 4, (3 * width) / 4, width];
 	            for (var i = 0; i < coords.size(); i += 1) {

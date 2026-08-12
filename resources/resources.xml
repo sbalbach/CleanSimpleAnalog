@@ -4,8 +4,10 @@
 	<string id="secondHandColor">Second Hand Color</string>
 	<string id="handsOutline">Outline of Hands</string>
 	<string id="hourHashMarks">Hour Hash Marks</string>
+	<string id="minuteHashMarks">Minute Hash Marks</string>
 	<string id="secondHandType">Second Hand Type</string>
 	<string id="showAllHourNumbers">Show all Hour Numbers</string>
+	<string id="showMinuteNumbers">Show Minute Numbers</string>
 	<string id="showBluetoothConnected">Show Bluetooth connected</string>
 	<string id="showNotificationCount">Show Notification Count</string>
 	<string id="showStepCount">Show Step Count</string>
@@ -36,8 +38,10 @@
 	    <property id="secondHandColor" type="number">5</property>
 	    <property id="handsOutline" type="number">0</property>
 	    <property id="hourHashMarks" type="number">0</property>
+	    <property id="minuteHashMarks" type="number">0</property>
 	    <property id="secondHandType" type="number">0</property>
 	    <property id="showAllHourNumbers" type="boolean">false</property>
+	    <property id="showMinuteNumbers" type="boolean">false</property>
 	    <property id="showBluetoothConnected" type="boolean">true</property>
 		<property id="showNotificationCount" type="boolean">true</property>
 		<property id="showStepCount" type="boolean">true</property>
@@ -108,6 +112,26 @@
 	        </settingConfig>
 	    </setting>
 	
+	    <setting propertyKey="@Properties.minuteHashMarks" title="@Strings.minuteHashMarks">
+	        <settingConfig type="list">
+	            <listEntry value="0">@Strings.none</listEntry>
+	            <listEntry value="1">@Strings.white</listEntry>
+	            <listEntry value="2">@Strings.lightGray</listEntry>
+	            <listEntry value="3">@Strings.darkGray</listEntry>
+	            <listEntry value="4">@Strings.black</listEntry>
+	            <listEntry value="5">@Strings.red</listEntry>
+	            <listEntry value="6">@Strings.darkRed</listEntry>
+	            <listEntry value="7">@Strings.orange</listEntry>
+	            <listEntry value="8">@Strings.yellow</listEntry>
+	            <listEntry value="9">@Strings.green</listEntry>
+	            <listEntry value="10">@Strings.darkGreen</listEntry>
+	            <listEntry value="11">@Strings.blue</listEntry>
+	            <listEntry value="12">@Strings.darkBlue</listEntry>
+	            <listEntry value="13">@Strings.purple</listEntry>
+	            <listEntry value="14">@Strings.pink</listEntry>
+	        </settingConfig>
+	    </setting>
+	
 	    <setting propertyKey="@Properties.secondHandType" title="@Strings.secondHandType">
 	        <settingConfig type="list">
 	            <listEntry value="0">@Strings.sweep</listEntry>
@@ -116,6 +140,10 @@
 	    </setting>
 
 	    <setting propertyKey="@Properties.showAllHourNumbers" title="@Strings.showAllHourNumbers">
+	        <settingConfig type="boolean" />
+	    </setting>
+
+	    <setting propertyKey="@Properties.showMinuteNumbers" title="@Strings.showMinuteNumbers">
 	        <settingConfig type="boolean" />
 	    </setting>
 
