@@ -1,2 +1,2 @@
 project.manifest = manifest.xml
-project.optimization = 0
+project.optimization = 3pz

@@ -7,11 +7,14 @@ using Toybox.Time.Gregorian;
 using Toybox.WatchUi;
 using Toybox.Application;
 
+import Toybox.Graphics;
+
 /*************************************************************************************************
  * To build for a particular product: right click a *.mc file and select "Build Current Project"
  * To run the built project: F5 or Ctrl-F5 (under Run menu)
  * To update the supported products: Ctrl-Shift-P and select/enter "Monkey C: Edit Products" or change in manifest.xml
  * To change compiler options (developer key path, optimizations): File/Preferences/Settings -> Extensions/Monkey C or change monkey.jungle
+ * ***Note***: the app is at the limit memory-wise so don't change the optimization setting in monkey.jungle (3pz) as this is maximum optimization
  *
  * To change user settings, use the Garmin Connect IQ app (this is tied to the store so if app is screwed up in store it will break all users):
  *  select Device bottom right; select My Watch Faces; select watch face; click blue Settings button
@@ -30,7 +33,7 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
     var secondsDialsFont;
     var isAwake = false;
     var screenShape;
-    var dndIcon;
+//    var dndIcon;
     var offscreenBuffer;
     var needsClip = false;
     var curClip;
@@ -188,20 +191,28 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
         secondsDialsFont = WatchUi.loadResource(Rez.Fonts.id_font_seconds_dials);
 
         // If this device supports the Do Not Disturb feature, load the associated Icon into memory.
-        if( System.getDeviceSettings() has :doNotDisturb ) {
-            dndIcon = WatchUi.loadResource(Rez.Drawables.DoNotDisturbIcon);
-        } else {
-            dndIcon = null;
-        }
+//        if( System.getDeviceSettings() has :doNotDisturb ) {			this Do Not Disturb icon stuff was causing issues for some devices so just removed it
+//            dndIcon = WatchUi.loadResource(Rez.Drawables.DoNotDisturbIcon);
+//        } else {
+//            dndIcon = null;
+//        }
 
         // If this device supports BufferedBitmap, allocate the buffers we use for drawing
         if( Toybox.Graphics has :BufferedBitmap ) {
             // Allocate a full screen size buffer.  This buffer is used to draw the watch face between full minute updates when the second hand is the only thing being updated.
-            offscreenBuffer = new Graphics.BufferedBitmap({
-                :width=>deviceContext.getWidth(),
-                :height=>deviceContext.getHeight()
-            });
-
+			if (Graphics has :createBufferedBitmap) {
+				// Allocates from system graphics pool (Saves app heap!)
+				offscreenBuffer = Graphics.createBufferedBitmap({
+					:width=>deviceContext.getWidth(),
+					:height=>deviceContext.getHeight()
+				}).get() as BufferedBitmap;
+			} else {
+				// Fallback for older devices (Allocates from app heap)
+				offscreenBuffer = new Graphics.BufferedBitmap({
+					:width=>deviceContext.getWidth(),
+					:height=>deviceContext.getHeight()
+				});
+			}
         } else {
             offscreenBuffer = null;
         }
@@ -271,9 +282,9 @@ class CleanSimpleAnalogView extends WatchUi.WatchFace {
         drawHashMarks(targetDeviceContext);
 
         // Draw the do-not-disturb icon if we support it and the setting is enabled
-        if( null != dndIcon && System.getDeviceSettings().doNotDisturb ) {
-            targetDeviceContext.drawBitmap( width75, heightDiv2 - 15, dndIcon);
-        }
+//        if( null != dndIcon && System.getDeviceSettings().doNotDisturb ) {
+//            targetDeviceContext.drawBitmap( width75, heightDiv2 - 15, dndIcon);
+//        }
 
         // Use white
         targetDeviceContext.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
